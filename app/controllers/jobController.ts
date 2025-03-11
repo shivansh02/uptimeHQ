@@ -37,7 +37,7 @@ export async function createJob(
         id: newJob.id,
       },
       data: {
-        url: `${DEPLOYMENT_URL}ping/id`,
+        url: `${DEPLOYMENT_URL}/ping/id`,
       },
     });
     return res.status(200).json({
@@ -58,6 +58,7 @@ export async function createJob(
 //   "gracePeriod": 5,
 //   "url": "http://localhost:8080/ping/1"
 // }
+
 
 export async function updateJob(
   req: Request,

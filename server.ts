@@ -5,6 +5,7 @@ import { errorMiddleware } from "./app/middleware/errors";
 import jobRouter from "./app/routes/job";
 import pingRouter from "./app/routes/ping";
 import { startMissedPingWorker } from "./jobs/missedPings";
+import "./jobs/alert"
 
 const app = express();
 
