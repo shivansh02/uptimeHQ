@@ -102,3 +102,19 @@ export async function updateJob(
     return res.status(500).json({ error: "unknown error" });
   }
 }
+
+export async function getJob(req: Request, res: Response, next: NextFunction) {
+  const jobId = req.params.id;
+  let job = await prisma.job.findUnique({
+    where: {
+      id: +jobId
+    }
+  })
+  const uptimePercent = job.pingCount/(job.pingCount+job.missedPingCount) * 100
+  const jobWithUptime = { uptimePercent, ...job }
+  return res.status(200).json({
+    success: true,
+    data: jobWithUptime,
+    message: "Resource fetched successfully",
+  });
+}

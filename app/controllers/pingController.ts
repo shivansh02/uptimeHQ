@@ -7,8 +7,11 @@ export async function pingJob(req: Request, res: Response, next: NextFunction) {
     const jobId = req.params.id;
     const {statusCode, duration} = req.body
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress 
-    console.log("IP: ", ipAddress)
-    console.log(req.headers)
+    const job = await prisma.job.findUnique({
+      where: {
+        id: +jobId
+      }
+    })
     const ping = await prisma.ping.create({
       data: {
         jobId: +jobId,
@@ -24,7 +27,10 @@ export async function pingJob(req: Request, res: Response, next: NextFunction) {
       },
       data: {
         lastPing: currentTime,
-        status: 'UP'
+        status: 'UP',
+        pingCount: {
+          increment: 1
+        }
       },
     });
     return res.status(200).json({ data: ping });

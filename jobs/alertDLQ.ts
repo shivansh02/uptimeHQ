@@ -11,7 +11,7 @@ const worker = new Worker(
   "alertsDLQ",
   async (job) => {
     const alert = job.data;
-    console.log("Processing alert:", alert);
+    console.log("Retrying alert:", alert);
 
     if (alert.type === "EMAIL") {
       const res = await sendEmail({

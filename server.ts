@@ -5,7 +5,7 @@ import { errorMiddleware } from "./app/middleware/errors";
 import jobRouter from "./app/routes/job";
 import pingRouter from "./app/routes/ping";
 import { startMissedPingWorker } from "./jobs/missedPings";
-import "./jobs/alert"
+import "./jobs/alert";
 
 const app = express();
 
@@ -14,17 +14,14 @@ console.log("Started missed ping worker");
 
 app.use(express.json());
 
-app.use("/auth", authRouter);
-app.use("/job", jobRouter);
 app.use("/ping", pingRouter);
-
-// app.get("/ping", (req, res) => {
-//   res.send("pong");
-// });
 
 app.use(verifyToken);
 
-// app.use(errorMiddleware);
+app.use("/auth", authRouter);
+app.use("/job", jobRouter);
+
+app.use(errorMiddleware);
 
 app.listen(8080, () => {
   console.log("Server is running on port 8080");

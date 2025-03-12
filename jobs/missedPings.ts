@@ -18,7 +18,7 @@ const worker = new Worker(
     const now = new Date();
 
     const jobs = await prisma.job.findMany({
-      where: { status: "UP" },
+      // where: { status: "UP" },
     });
 
     for (const job of jobs) {
@@ -38,7 +38,12 @@ const worker = new Worker(
         if (!job.lastPing || new Date(job.lastPing) < graceTime) {
           await prisma.job.update({
             where: { id: job.id },
-            data: { status: "DOWN" },
+            data: {
+              status: "DOWN",
+              missedPingCount: {
+                increment: 1,
+              },
+            },
           });
 
           console.log(`Job ${job.id} marked as DOWN`);
@@ -58,12 +63,17 @@ const worker = new Worker(
       }
     }
   },
-  { connection }
+  { connection, removeOnComplete: { age: 3600 }, removeOnFail: { age: 3600 } }
 );
 
-
 async function scheduleWorker() {
-  await queue.add(queueName, {}, { repeat: { pattern: "*/1 * * * *" } }); // every minute
+  const repeatableJobs = await queue.getJobSchedulers();
+  // const repeatableJobs2 = await
+  console.log("jobs: ", repeatableJobs);
+  if ((repeatableJobs.length == 0)) {
+    console.log("added job")
+    await queue.add(queueName, {}, { repeat: { pattern: "*/1 * * * *" } });
+  }
 }
 
 export async function startMissedPingWorker() {

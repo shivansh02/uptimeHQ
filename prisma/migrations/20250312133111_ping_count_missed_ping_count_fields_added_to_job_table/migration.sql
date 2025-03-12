@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Job" ADD COLUMN     "missedPingCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "pingCount" INTEGER NOT NULL DEFAULT 0;
