@@ -57,7 +57,7 @@ export const userLogin = async (req, res, next) => {
       // return res
       //   .status(401)
       //   .json({ success: false, error: "Invalid password" });
-    //  return next(new BadRequest('Wrong password!', ErrorCode.INCORRECT_PASSWORD));
+     return next(new BadRequest('Wrong password!', ErrorCode.INCORRECT_PASSWORD));
     }
     const token = jwt.sign({ userId: existingUser.id }, JWT_SECRET, {
       expiresIn: "240h",

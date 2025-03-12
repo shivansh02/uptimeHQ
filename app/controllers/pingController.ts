@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import prisma from "../../prisma/client";
-//todo: responseTime, error handling
+//todo: error handling
 export async function pingJob(req: Request, res: Response, next: NextFunction) {
   try {
     const currentTime = new Date();
     const jobId = req.params.id;
-    const { statusCode } = req.body;
+    const {statusCode, duration} = req.body
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress 
     console.log("IP: ", ipAddress)
     console.log(req.headers)
@@ -13,8 +13,9 @@ export async function pingJob(req: Request, res: Response, next: NextFunction) {
       data: {
         jobId: +jobId,
         receivedAt: currentTime,
-        responseTime: 0,
         statusCode,
+        duration,
+        ipAddress: ipAddress[0]
       },
     });
     await prisma.job.update({
@@ -48,6 +49,7 @@ export async function getPings(
       skip: skip,
       take: take,
     });
+    return res.status(200).json({data})
   } catch (error) {
     return res.status(500).json({error: "error fetching ping history"})
   }

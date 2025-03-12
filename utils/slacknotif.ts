@@ -5,11 +5,18 @@ type SlackNotification = {
   text: string;
 };
 
-export async function sendSlackNotification(notif: SlackNotification): Promise<void> {
+export async function sendSlackNotification(
+  notif: SlackNotification
+): Promise<{ success: boolean; message: string }> {
   try {
     const response = await axios.post(notif.destination, { text: notif.text });
-    console.log("Slack notification sent:", response.data);
+
+    if (response.status >= 200 && response.status < 300) {
+      return { success: true, message: "Slack notification sent successfully" };
+    } else {
+      return { success: false, message: `Slack API error: ${response.statusText}` };
+    }
   } catch (error) {
-    console.error("Error sending Slack notification:", error);
+    return { success: false, message: (error as Error).message };
   }
 }

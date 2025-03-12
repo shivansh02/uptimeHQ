@@ -1,6 +1,6 @@
 export class HttpException extends Error {
   message: string;
-  errorCode: any;
+  errorCode: ErrorCode;
   statusCode: number;
   errors: ErrorCode;
 
@@ -17,4 +17,5 @@ export enum ErrorCode {
     USER_NOT_FOUND = 1001,
     USER_ALREADY_EXISTS = 1002,
     INCORRECT_PASSWORD = 1003,
+    INTERNAL_EXCEPTION = 3001
 }

@@ -16,19 +16,19 @@ export async function createJob(
     const {
       userId,
       name,
-      interval,
+      cronSchedule,
       gracePeriod,
     }: {
       userId: string;
       name: string;
-      interval: number;
+      cronSchedule: string;
       gracePeriod: number;
     } = req.body;
     const newJob = await prisma.job.create({
       data: {
         userId: +userId,
         name,
-        interval,
+        cronSchedule,
         gracePeriod,
       },
     });
@@ -59,7 +59,6 @@ export async function createJob(
 //   "url": "http://localhost:8080/ping/1"
 // }
 
-
 export async function updateJob(
   req: Request,
   res: Response,
@@ -70,13 +69,13 @@ export async function updateJob(
     const {
       userId,
       name,
-      interval,
+      cronSchedule,
       gracePeriod,
       url,
     }: {
       userId: string;
       name: string;
-      interval: number;
+      cronSchedule: string;
       gracePeriod: number;
       url: string;
     } = req.body;
@@ -87,7 +86,7 @@ export async function updateJob(
       data: {
         userId: +userId,
         name,
-        interval,
+        cronSchedule,
         gracePeriod,
         url,
       },

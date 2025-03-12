@@ -2,14 +2,13 @@ import IORedis from "ioredis";
 import { Queue, Worker } from "bullmq";
 import { sendEmail } from "../utils/email";
 import { sendSlackNotification } from "../utils/slackNotif";
-import { alertsDLQ } from "./alertDLQ";
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
-export const alertsQueue = new Queue("alerts", { connection });
+export const alertsDLQ = new Queue("alertsDLQ", { connection });
 
 const worker = new Worker(
-  "alerts",
+  "alertsDLQ",
   async (job) => {
     const alert = job.data;
     console.log("Processing alert:", alert);
@@ -22,8 +21,7 @@ const worker = new Worker(
       });
 
       if (!res.success) {
-        console.log("Email failed, adding to DLQ:", res.message);
-        await alertsDLQ.add("alertsDLQ", alert);
+        console.log("Email retry failed:", res.message);
       }
     }
 
@@ -34,8 +32,7 @@ const worker = new Worker(
       });
 
       if (!res.success) {
-        console.log("Slack notification failed, adding to DLQ:", res.message);
-        await alertsDLQ.add("alertsDLQ", alert);
+        console.log("Slack notification retry failed: ", res.message);
       }
     }
   },

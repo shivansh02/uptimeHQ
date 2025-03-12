@@ -29,7 +29,7 @@ model Job {
   userId Int
   name String
   url String?
-  interval Int
+  cronSchedule String?
   gracePeriod Int
   lastPing DateTime?
   status Status @default(DOWN)
@@ -44,8 +44,9 @@ model Ping {
   job Job @relation(fields:[jobId], references: [id])
   jobId Int
   receivedAt DateTime
-  responseTime Int
-  statusCode Int
+  statusCode Int?
+  duration Int?
+  ipAddress String?
 }
 
 model Alert {

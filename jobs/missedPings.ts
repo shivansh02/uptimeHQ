@@ -1,65 +1,71 @@
-import { Queue, Worker } from "bullmq";
+import { Worker, Queue } from "bullmq";
+import cronParser from "cron-parser";
 import dayjs from "dayjs";
 import IORedis from "ioredis";
 import prisma from "../prisma/client";
 import { alertsQueue } from "./alert";
 
 const queueName = "check-missed-pings";
+const connection = new IORedis({ maxRetriesPerRequest: null });
 
-const connection = new IORedis({maxRetriesPerRequest: null})
+const queue = new Queue(queueName, { connection });
 
-const queue = new Queue(queueName, {connection});
-
-// Worker to process jobs
 const worker = new Worker(
   queueName,
   async () => {
     console.log("Checking for missed pings...");
 
     const now = new Date();
+
     const jobs = await prisma.job.findMany({
-      where: {
-        status: "UP",
-      },
+      where: { status: "UP" },
     });
 
     for (const job of jobs) {
-      const expectedTime = dayjs(job.lastPing || job.createdAt)
-        .add(job.interval + job.gracePeriod, "seconds")
-        .toDate();
+      if (!job.cronSchedule) continue;
 
-      if (now > expectedTime) {
-        await prisma.job.update({
-          where: { id: job.id },
-          data: { status: "DOWN" },
+      try {
+        const interval = cronParser.parseExpression(job.cronSchedule, {
+          utc: true,
         });
-        console.log(`Job ${job.id} marked as DOWN`);
 
-        const alertTypes = await prisma.alert.findMany({
-          where : {
-            jobId: job.id
+        const lastExpectedRun = interval.prev().toDate();
+        const graceTime = dayjs(lastExpectedRun)
+          .add(job.gracePeriod, "seconds")
+          .toDate();
+
+        // if last expected run + grace period has passed without a ping, mark as DOWN
+        if (!job.lastPing || new Date(job.lastPing) < graceTime) {
+          await prisma.job.update({
+            where: { id: job.id },
+            data: { status: "DOWN" },
+          });
+
+          console.log(`Job ${job.id} marked as DOWN`);
+
+          // add to alert queue
+          const alertTypes = await prisma.alert.findMany({
+            where: { jobId: job.id },
+          });
+
+          for (const alert of alertTypes) {
+            console.log("Adding alert:", { name: job.name, ...alert });
+            await alertsQueue.add("alert", { name: job.name, ...alert });
           }
-        })
-        console.log("alerts found", alertTypes)
-
-        for(const alert of alertTypes) {
-          console.log("added", {name: job.name, ...alert})
-          await alertsQueue.add("alert", {name: job.name, ...alert})
         }
-
-        // await alertsQueue.add("alert", {jobId: job.id, name: job.name})
+      } catch (error) {
+        console.error(`Invalid cron schedule for job ${job.id}:`, error);
       }
     }
   },
   { connection }
 );
 
-// run every 10 seconds
-async function scheduleJob() {
-  await queue.add(queueName, {}, { repeat: { every: 60000 } });
+
+async function scheduleWorker() {
+  await queue.add(queueName, {}, { repeat: { pattern: "*/1 * * * *" } }); // every minute
 }
 
 export async function startMissedPingWorker() {
-  await scheduleJob();
+  await scheduleWorker();
 }
- 
