@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resendKey = process.env.RESEND_KEY;
-const resend = new Resend("re_S2xAyru1_Ks95ou2LpvFytE4FmofAXMQw");
+const resend = new Resend(resendKey);
 
 type EmailParams = {
   destination: string;

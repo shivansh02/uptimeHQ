@@ -1,9 +1,10 @@
-import express from 'express'
-import { createJob, updateJob } from '../controllers/jobController';
-import { pingJob } from '../controllers/pingController';
+import express from "express";
+import { getPings, pingJob } from "../controllers/pingController";
+import { errorHandler } from "../../errorHandler";
 
-const pingRouter = express.Router()
+const pingRouter = express.Router();
 
-pingRouter.post('/:id', pingJob)
+pingRouter.post("/:id", errorHandler(pingJob));
+pingRouter.get("/:id", errorHandler(getPings));
 
 export default pingRouter;
